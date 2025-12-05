@@ -23,8 +23,8 @@ class BankImport
 	public $dateEnd;
 	public $numReleve;
 	public $hasHeader;
-	public $lineHeader; // Si on historise, on concerve le header d'origine pour avoir le bon intitulé dans nos future tableaux
-	public $TOriginLine=array(); // Contient les lignes d'origin du fichier, pour l'historisation
+	public $lineHeader; // If we keep history, we preserve the original header to have the correct title in our future tables
+	public $TOriginLine=array(); // Contains the original lines from the file, for history
 
 	public $TBank = array(); // Will contain all account lines of the period
 	public $TCheckReceipt = array(); // Will contain check receipt made for account lines of the period
@@ -97,7 +97,7 @@ class BankImport
 	function load_transactions($delimiter='', $dateFormat='', $mapping_string='', $enclosure='"') {
 		global $hookmanager;
 
-		//gestion possible par un hook
+		// Possible handling by a hook
 		if (is_object($hookmanager)) {
 			$parameters = array("moduleName" => "bankimport");
 			$action = "load_transactions";
@@ -151,7 +151,7 @@ class BankImport
 	function load_file_transactions($delimiter='', $dateFormat='', $mapping_string='', $enclosure='"') {
 		global $conf, $langs, $hookmanager;
 
-		//gestion possible par un hook
+		// Possible handling by a hook
 		if (is_object($hookmanager)) {
 			$parameters = array("moduleName" => "bankimport");
 			$action = "load_file_transactions";
@@ -164,15 +164,19 @@ class BankImport
             }
 		}
 		if(empty($delimiter)) $delimiter = getDolGlobalString('BANKIMPORT_SEPARATOR');
-		if(empty($dateFormat)) $dateFormat = strtr(getDolGlobalString('BANKIMPORT_DATE_FORMAT'), array('%'=>''));
+		if(empty($dateFormat)) {
+			$dateFormat = getDolGlobalString('BANKIMPORT_DATE_FORMAT');
+		}
+		// Remove % characters from date format (strftime format) to convert to DateTime format
+		$dateFormat = strtr($dateFormat, array('%'=>''));
 
 		if(empty($mapping_string)) $mapping_string = getDolGlobalString('BANKIMPORT_MAPPING');
 		$mapping_string = preg_replace_callback('|=([^' . $delimiter . ']*)|', 'BankImport::extractNegDir', $mapping_string);
 
 		if($delimiter == '\t')$delimiter="\t";
 
-		if(strpos($mapping_string,$delimiter) === false) $mapping = explode(";", $mapping_string); // pour le \t
-		else $mapping = explode($delimiter, $mapping_string); // pour le \t
+		if(strpos($mapping_string,$delimiter) === false) $mapping = explode(";", $mapping_string); // for \t
+		else $mapping = explode($delimiter, $mapping_string); // for \t
 
 		$f1 = fopen($this->file, 'r');
 		if($this->hasHeader) $this->lineHeader = fgets($f1, 4096);
@@ -200,7 +204,7 @@ class BankImport
 				if($mapping_en_colonne) $data = $this->construct_data_tab_column_file($mapping, $dataline[0]);
 				else $data = array_combine($mapping, $dataline);
 
-				// Gestion du montant débit / crédit
+				// Debit / credit amount handling
 				if (empty($data['debit']) && empty($data['credit'])) {
 					$amount = (float)price2num($data['amount']);
 
@@ -234,8 +238,11 @@ class BankImport
 				$datetime = DateTime::createFromFormat($dateFormat, $data['date']);
 
 				$data['datev'] = ($datetime === false) ? 0 : $datetime->getTimestamp();
-
-				$data['error'] = '';
+				if ($datetime === false){
+					$data['error'] = 'Error parsing date from string "'.$data['date'].'" with format "'.$dateFormat.'"';
+				} else {
+					$data['error'] = '';
+				}
 			} else {
 				$data = array();
 				$data['error'] = $langs->trans('LineDoesNotMatchWithMapping');
@@ -396,8 +403,7 @@ class BankImport
 	public function import_data($TLine)
 	{
 		global $conf, $db;
-
-		$TLineBackup = $TLine; // car le programme est concue pour scier la branche sur laquelle il est assis
+		$TLineBackup = $TLine; // because the program is designed to cut the branch it's sitting on
 
 		$PDOdb = new TPDOdb;
 		if (!empty($TLine['piece']))
@@ -408,7 +414,7 @@ class BankImport
 			dol_include_once('/compta/sociales/class/paymentsocialcontribution.class.php');
 
 			/*
-			 * Reglemenent créé manuellement
+			 * Payment created manually
 			 */
 
 			$db = &$this->db;
@@ -527,7 +533,7 @@ class BankImport
 		else exit($langs->trans('BankImport_FatalError_PaymentType_NotPossible', $type));
 
 		if(getDolGlobalString('BANKIMPORT_ALLOW_DRAFT_INVOICE')) $this->validateInvoices($TAmounts, $type);
-
+//echo "date_paye: $date_paye<br>";
 	    $paiement->datepaye     = $date_paye;
 	    $paiement->amounts      = $TAmounts;   // Array with all payments dispatching
 	    $paiement->paiementid   = $fk_payment;
@@ -536,23 +542,24 @@ class BankImport
 	    $paiement->note         = $note;
 
 		$paiement_id = $paiement->create($user, 1);
-
+		$label = !empty($this->TFile[$iFileLine]['label']) ? $this->TFile[$iFileLine]['label'] : $note;
+		$label = $label . ' - test';
 		if ($paiement_id > 0)
 		{
-			$bankLineId = $paiement->addPaymentToBank($user, $type, !empty($this->TFile[$iFileLine]['label']) ? $this->TFile[$iFileLine]['label'] : $note, $this->account->id, $l_societe->name, '');
+			$bankLineId = $paiement->addPaymentToBank($user, $type, $label, $this->account->id, $l_societe->name, '');
 			$TLine[$bankLineId] = $iFileLine;
 
 			$bankLine = new AccountLine($this->db);
 			$bankLine->fetch($bankLineId);
 			$this->TBank[$bankLineId] = $bankLine;
 
-			// On supprime le new saisi
+			// We remove the entered new
 			foreach($TLine['new'] as $k=>$iFileLineNew)
 			{
 				if($iFileLineNew == $iFileLine) unset($TLine['new'][$k]);
 			}
 
-			// Uniquement pour les factures client (les acomptes fournisseur n'existent pas)
+			// Only for customer invoices (supplier deposits don't exist)
 			if(getDolGlobalInt('BANKIMPORT_AUTO_CREATE_DISCOUNT') && $type === 'payment') $this->createDiscount($TAmounts);
 
 			return $bankLineId;
@@ -571,7 +578,7 @@ class BankImport
 
 			$object = new Facture($db);
 			$object->fetch($id_fac);
-			if($object->type != 3) continue; // Uniquement les acomptes
+			if($object->type != 3) continue; // Only deposits
 
 			$object->fetch_thirdparty();
 
@@ -586,7 +593,7 @@ class BankImport
 			{
 				$db->begin();
 
-				// Boucle sur chaque taux de tva
+				// Loop on each VAT rate
 				$i = 0;
 				foreach ($object->lines as $line) {
 					$amount_ht [$line->tva_tx] += $line->total_ht;
@@ -625,7 +632,7 @@ class BankImport
 
 				if (empty($error))
 				{
-					// Classe facture
+					// Invoice class
 					$result = $object->set_paid($user);
 					if ($result >= 0)
 					{
