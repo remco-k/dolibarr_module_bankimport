@@ -179,7 +179,14 @@ class BankImport
 		else $mapping = explode($delimiter, $mapping_string); // for \t
 
 		$f1 = fopen($this->file, 'r');
-		if($this->hasHeader) $this->lineHeader = fgets($f1, 4096);
+		if($this->hasHeader) {
+			$firstLine=fgets($f1, 4096);
+			// if $firstLine starts with "KNAB EXPORT"+$delimiter then handle this as an extra header and skip that line
+			// This is a dutch bank that has this as an extra header on row 1:
+			// KNAB EXPORT;;;;;;;;;;;;;;;;
+			if (strpos($firstLine, "KNAB EXPORT".$delimiter)===0) $firstLine=fgets($f1, 4096);
+			$this->lineHeader = $firstLine;
+		}
 
 		while(!feof($f1)) {
 
@@ -203,7 +210,7 @@ class BankImport
 
 				if($mapping_en_colonne) $data = $this->construct_data_tab_column_file($mapping, $dataline[0]);
 				else $data = array_combine($mapping, $dataline);
-
+				
 				// Debit / credit amount handling
 				if (empty($data['debit']) && empty($data['credit'])) {
 					$amount = (float)price2num($data['amount']);
