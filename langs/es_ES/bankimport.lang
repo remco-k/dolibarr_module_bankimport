@@ -54,6 +54,7 @@ BankTransactionWillBeCreatedAndReconciled = El movimiento va a ser importado y c
 WillBeReconciledWithStatement = El movimiento va a ser conciliado en el extracto %s
 AlreadyReconciledWithStatement = El movimiento ya fue conciliado en el extracto %s
 LineDoesNotMatchWithMapping = Línea de archivo no cumple con el mapeo de columnas
+BankTransactionOutOfTimeWindow = La transacción está fuera del periodo permitido
 
 BankImport_FatalError_PaymentType_NotPossible = Error: el tipo de pago [%s] no es posible
 

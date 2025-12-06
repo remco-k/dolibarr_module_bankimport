@@ -49,6 +49,7 @@ BankTransactionWillBeCreatedAndReconciled = Transaction will be created and reco
 WillBeReconciledWithStatement = Transaction will be reconciliated with statement %s
 AlreadyReconciledWithStatement = Transaction already reconciliated with statement %s
 LineDoesNotMatchWithMapping = File line doesn't match mapping
+BankTransactionOutOfTimeWindow = Transaction is out of time window
 
 BankImport_FatalError_PaymentType_NotPossible=Error : type of payment [%s] is not possible
 

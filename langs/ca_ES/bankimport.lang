@@ -54,6 +54,7 @@ BankTransactionWillBeCreatedAndReconciled = El moviment serà importat i concili
 WillBeReconciledWithStatement = El moviment serà conciliat a l'extracte %s
 AlreadyReconciledWithStatement = El moviment ja va ser conciliat a l'extracte %s
 LineDoesNotMatchWithMapping = Línia de fitxer no compleix amb el mapeig de columnes
+BankTransactionOutOfTimeWindow = La transacció està fora del període permès
 
 BankImport_FatalError_PaymentType_NotPossible = Error: el tipus de pagament [%s] no és possible
 

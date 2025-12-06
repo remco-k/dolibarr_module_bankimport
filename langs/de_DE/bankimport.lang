@@ -49,6 +49,7 @@ BankTransactionWillBeCreatedAndReconciled = Buchung wird erstellt und mit dem Ko
 WillBeReconciledWithStatement = Buchung wird mit Kontoauszug %s abgeglichen
 AlreadyReconciledWithStatement = Buchung ist bereits mit Kontoauszug %s abgeglichen
 LineDoesNotMatchWithMapping = Zeile der Datei stimmt nicht mit der Zuorndung überein
+BankTransactionOutOfTimeWindow = Transaktion liegt außerhalb des erlaubten Zeitraums
 
 BankImport_FatalError_PaymentType_NotPossible = Fehler: Die Zahlungsart [%s] ist nicht möglich
 

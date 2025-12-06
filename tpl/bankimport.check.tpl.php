@@ -237,8 +237,19 @@
 					});
 
 				</script></td>
-				<td><?php echo $langs->trans('BankTransactionWillBeCreatedAndReconciled', $import->numReleve) ?></td>
-				<td align="center"><input type="checkbox" rel="doImport" <?php !getDolGlobalString('BANKIMPORT_UNCHECK_ALL_LINES') ? print 'checked="checked"' : ''; ?> name="TLine[new][]" value="<?php echo $i ?>" /></td>
+				<?php 
+					$actionText=$langs->trans('BankTransactionWillBeCreatedAndReconciled', $import->numReleve);
+					$checked=!getDolGlobalString('BANKIMPORT_UNCHECK_ALL_LINES');
+					// Check if the transaction is within the given start/end time, if not, then display a warning and uncheck the action
+					if ( $line['datev']<$import->dateStart ||  $line['datev']>=$import->dateEnd+86400/*1 day*/) {
+						// Display a yellow warning icon and text: ⚠ Transaction is out of time window
+						$checkDate=$line['datev'];
+						$actionText='<span style="color:#f6b600;font-size:16px;vertical-align:middle;" title="'.$langs->trans('BankTransactionOutOfTimeWindow').'">&#9888;</span> '.$langs->trans('BankTransactionOutOfTimeWindow');
+						$checked=false;
+					}
+				?>
+				<td><?php /*here todo*/echo $actionText ?></td>
+				<td align="center"><input type="checkbox" rel="doImport" <?php $checked ? print 'checked="checked"' : ''; ?> name="TLine[new][]" value="<?php echo $i ?>" /></td>
 			<?php } ?>
 
 			<?php $var = !$var ?>
