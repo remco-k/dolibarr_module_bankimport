@@ -111,15 +111,15 @@ class BankImport
 
 		}
 
-		$this->load_bank_transactions();
+		$result=$this->load_file_transactions($delimiter, $dateFormat, $mapping_string, $enclosure);
+		$this->load_bank_transactions($result['fileDateStart'], $result['fileDateEnd']);
 		$this->load_check_receipt();
-		$this->load_file_transactions($delimiter, $dateFormat, $mapping_string, $enclosure);
 	}
 
 	// Load bank lines
-	function load_bank_transactions() {
+	function load_bank_transactions($startDate, $endDate) {
 		$sql = "SELECT rowid FROM " . MAIN_DB_PREFIX . "bank WHERE fk_account = " . $this->account->id . " ";
-		$sql.= "AND dateo BETWEEN '" . date('Y-m-d', $this->dateStart) . "' AND '" . date('Y-m-d', $this->dateEnd) . "' ";
+		$sql.= "AND dateo BETWEEN '" . date('Y-m-d', $startDate) . "' AND '" . date('Y-m-d', $endDate) . "' ";
 		$sql.= "ORDER BY datev DESC";
 
 		$resql = $this->db->query($sql);
@@ -150,6 +150,8 @@ class BankImport
 	// Load file lines
 	function load_file_transactions($delimiter='', $dateFormat='', $mapping_string='', $enclosure='"') {
 		global $conf, $langs, $hookmanager;
+		$result['fileDateStart']=$this->dateStart;
+		$result['fileDateEnd']=$this->dateEnd;		
 
 		// Possible handling by a hook
 		if (is_object($hookmanager)) {
@@ -250,6 +252,11 @@ class BankImport
 				} else {
 					$data['error'] = '';
 				}
+				// Extend datestart and dateend if the file contains data outside of the window.
+				// This gives us the chance to load_bank_transactions for those transactions as well, it prevents importing
+				// unchecked duplicate transactions
+				if ($result['fileDateStart']>$data['datev']) $result['fileDateStart']=$data['datev'];
+				if ($result['fileDateEnd']<$data['datev']) $result['fileDateEnd']=$data['datev'];
 			} else {
 				$data = array();
 				$data['error'] = $langs->trans('LineDoesNotMatchWithMapping');
@@ -259,6 +266,7 @@ class BankImport
 		}
 
 		fclose($f1);
+		return $result;
 	}
 
 	function construct_data_tab_column_file(&$mapping, $data) {
