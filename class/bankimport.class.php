@@ -301,7 +301,7 @@ class BankImport
 		$amount = floatval($amount); // Transform to float
 		foreach($this->TBank as $i => $bankLine) {
 			$test = ($amount == $bankLine->amount);
-			if(getDolGlobalString('BANKIMPORT_MATCH_BANKLINES_BY_AMOUNT_AND_LABEL')) $test = ($amount == $bankLine->amount && $label == $bankLine->label);
+			if(getDolGlobalString('BANKIMPORT_MATCH_BANKLINES_BY_AMOUNT_AND_LABEL')) $test = ($amount == $bankLine->amount && trim($label) == trim($bankLine->label));
 			if(!empty($test)) {
 				unset($this->TBank[$i]);
 
