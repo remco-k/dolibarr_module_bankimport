@@ -207,12 +207,12 @@ class BankImport
 
 			if((count($dataline) == count($mapping)) || $mapping_en_colonne) {
 				$this->TOriginLine[] = $dataline;
-
+				
 				if($mapping_en_colonne) $data = $this->construct_data_tab_column_file($mapping, $dataline[0]);
 				else $data = array_combine($mapping, $dataline);
-				
+
 				// Debit / credit amount handling
-				if (empty($data['debit']) && empty($data['credit'])) {
+				if ((empty($data['debit']) || !empty($data['debit'])) && (empty($data['credit'])) || !empty($data['credit'])) {
 					$amount = (float)price2num($data['amount']);
 
 					// Direction support
@@ -752,11 +752,10 @@ class BankImport
 	 * Extract negative direction token from direction key
 	 *
 	 * @param array $matches Regex matches
-	 * @return string Last separator (Effectively removing the extracted negative direction)
 	 */
 	private function extractNegDir(array $matches) {
 		$this->neg_dir = $matches[1];
-		return substr($matches[0], -1);
+		return '';
 	}
 }
 
