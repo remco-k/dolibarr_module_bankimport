@@ -81,7 +81,10 @@ class BankImport
 				$upload_dir = $conf->bankimport->dir_output . '/' . dol_sanitizeFileName($this->account->ref);
 
 				dol_add_file_process($upload_dir,1,1,$filename);
-				$this->file = $upload_dir . '/' . $_FILES[$filename]['name'];
+				$this->file = $upload_dir . '/' . dol_string_nohtmltag($_FILES[$filename]['name']); // dol_string_nohtmltag fixes files with 2 or more consecutive spaces. Otherwise these are not working.
+				// Note: We use dol_string_nohtmltag(filename) here to fix a not working import with 2 (or more) consecutive spaces in its filename
+				// dol_add_file_process (above) is removing these duplicate spaces and are replaced by one. So if we don't do that here, the import will not work, as it can't find the file with 2 spaces. (it has created the file with 1 space)
+				// Since dol_add_file_process is using dol_string_nohtmltag to remove duplicate spaces, we wil also do that here so we generate exactly the same filename as dol_add_file_process has created.
 				$info = pathinfo($this->file);
 				$this->file = $info['dirname'].'/'.dol_sanitizeFileName($info['filename'].'.'.strtolower($info['extension']));
 
