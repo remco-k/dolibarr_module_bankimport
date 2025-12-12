@@ -234,7 +234,7 @@
 
 						});
 
-					});
+					}).trigger('change'); // Triggers the show of invoices when we found the thirdparty via code_client
 
 				</script></td>
 				<?php 
