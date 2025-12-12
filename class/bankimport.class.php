@@ -298,14 +298,14 @@ class BankImport
 		foreach($this->TFile as &$fileLine) {
 			$amount = price2num($fileLine['amount']); // Transform to numeric string
 			if(is_numeric($amount)) {
-				$transac = $this->search_dolibarr_transaction_by_amount($amount, $fileLine['label']);
+				$transac = $this->search_dolibarr_transaction_by_amount($amount, $fileLine['label'], $fileLine['reference']);
 				if($transac === false) $transac = $this->search_dolibarr_transaction_by_receipt($amount);
 				$fileLine['bankline'] = $transac;
 			}
 		}
 	}
 
-	private function search_dolibarr_transaction_by_amount($amount, $label) {
+	private function search_dolibarr_transaction_by_amount($amount, $label, $reference) {
 		global $conf, $langs;
 		$langs->load("banks");
 
@@ -313,6 +313,10 @@ class BankImport
 		foreach($this->TBank as $i => $bankLine) {
 			$test = ($amount == $bankLine->amount);
 			if(getDolGlobalString('BANKIMPORT_MATCH_BANKLINES_BY_AMOUNT_AND_LABEL')) $test = ($amount == $bankLine->amount && trim($label) == trim($bankLine->label));
+			if (isset($reference) && isset($bankLine->num_chq) && !empty($bankLine->num_chq)) { // if a 'reference' field is set in the field mapping, use that as a unique identifier for the transaction matching
+				// label is always ignored when using this reference mode
+				$test = ($amount == $bankLine->amount && $reference == $bankLine->num_chq);
+			}
 			if(!empty($test)) {
 				unset($this->TBank[$i]);
 
@@ -361,6 +365,7 @@ class BankImport
 				) . '">'
 				. $bankLine->num_releve
 				. '</a>';
+			if (isset($bankLine->num_chq) && !empty($bankLine->num_chq)) $link=$link." (".$bankLine->num_chq.")";
 			$result = $langs->transnoentitiesnoconv('AlreadyReconciledWithStatement', $link);
 			$autoaction = false;
 		} else {
@@ -558,6 +563,7 @@ class BankImport
 	    if (floatval(DOL_VERSION) >= 13.0) $paiement->num_payment = '';
         else $paiement->num_paiement = '';
 	    $paiement->note         = $note;
+		$paiement->num_payment	= $this->TFile[$iFileLine]['reference'];
 
 		$paiement_id = $paiement->create($user, 1);
 		$label = !empty($this->TFile[$iFileLine]['label']) ? $this->TFile[$iFileLine]['label'] : $note;
