@@ -561,7 +561,6 @@ class BankImport
 
 		$paiement_id = $paiement->create($user, 1);
 		$label = !empty($this->TFile[$iFileLine]['label']) ? $this->TFile[$iFileLine]['label'] : $note;
-		$label = $label . ' - test';
 		if ($paiement_id > 0)
 		{
 			$bankLineId = $paiement->addPaymentToBank($user, $type, $label, $this->account->id, $l_societe->name, '');
