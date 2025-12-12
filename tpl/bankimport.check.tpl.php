@@ -126,7 +126,7 @@
 					echo '<br />';
 					echo $line['code_client'].' <span onclick="$(\'#span_for_company_'.$i.'\').show(); $(this).hide();"><b>'.$name.'</b></span><span id="span_for_company_'.$i.'" style="display:none">'.$select_company.'</span>';
 					echo '&nbsp;<span class="fieldrequired">*</span><br />';
-					echo $form->select_types_paiements('', 'TLine[fk_payment]['.$i.']');
+					echo $form->select_types_paiements("VIR", 'TLine[fk_payment]['.$i.']', '', 2);
 					echo '&nbsp;<span class="fieldrequired">*</span>';
 
 				?>
