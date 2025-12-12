@@ -77,6 +77,11 @@ if(GETPOST('compare','alphanohtml')) {
 		$import->import_data(GETPOST('TLine','array'));
 		$tpl = 'tpl/bankimport.end.tpl.php';
 	}
+} else {
+	// select the first bankaccount by default and set a default transaction name
+	$import->account = new Account($db);
+	$import->account->fetch(1);	
+	$import->numReleve=dol_print_date($import->dateStart, '%Y%m') ;
 }
 
 llxHeader('', $langs->trans('TitleBankImport'));
