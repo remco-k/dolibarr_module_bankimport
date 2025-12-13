@@ -108,8 +108,7 @@
 					<?php
 
 					$comboName = 'TLine[fk_soc]['.$i.']';
-					$line['code_client'] = trim($line['code_client']);
-
+					$line['code_client'] = substr(trim($line['code_client']), 0, 32);
 					$res = $db->query("SELECT rowid, nom FROM ".MAIN_DB_PREFIX."societe
 							WHERE code_compta='".$db->escape($line['code_client'])."' OR code_compta_fournisseur='".$db->escape($line['code_client'])."'
 							LIMIT 1");
