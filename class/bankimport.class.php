@@ -297,10 +297,12 @@ class BankImport
 		// For each file transaction, we search in Dolibarr bank transaction if there is a match by amount
 		foreach($this->TFile as &$fileLine) {
 			$amount = price2num($fileLine['amount']); // Transform to numeric string
+			$label = $fileLine['label'];
+			$reference = $fileLine['reference'];
 			if(is_numeric($amount)) {
-				$transac = $this->search_dolibarr_transaction_by_amount($amount, $fileLine['label'], $fileLine['reference']);
-				if($transac === false) $transac = $this->search_dolibarr_transaction_by_receipt($amount);
-				if ($transac === false) $transac = $this->search_dolibarr_transaction_by_reference($amount, $fileLine['reference']);
+				$transac = $this->search_dolibarr_transaction_by_amount($amount, $label, $reference);
+				if ($transac === false) $transac = $this->search_dolibarr_transaction_by_receipt($amount);
+				if ($transac === false) $transac = $this->search_dolibarr_transaction_by_reference($amount, $reference);
 				$fileLine['bankline'] = $transac;
 			}
 		}
