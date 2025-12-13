@@ -717,7 +717,7 @@ function printStandardValues(&$db, &$user, &$langs, &$acct, &$objp, &$num, &$tot
 					$facture->fetch($res->fk_facturefourn);
 					//if ($facture->id > 0) print '<br />'.$facture->getNomUrl(1); La facture sera maintenant affichée par la fonction getListFacture() en dessous
 				}
-
+				
 				$newline=0;
 			}
 			elseif ($links[$key]['type']=='payment_sc')
@@ -793,7 +793,7 @@ function printStandardValues(&$db, &$user, &$langs, &$acct, &$objp, &$num, &$tot
 		}
 
 
-		if($links[key($links)]['type']=='payment_supplier') $param = 'fourn';
+		if($links[$key]['type']=='payment_supplier') $param = 'fourn';
 		print '<br />'.getListFacture($links[$key]['url_id'], $param);
 	}
 	// Avec la nouvelle version de bankimport, on peut régler des factures de différents tiers avec un même paiement, donc on les affiche toutes
