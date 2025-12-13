@@ -300,9 +300,31 @@ class BankImport
 			if(is_numeric($amount)) {
 				$transac = $this->search_dolibarr_transaction_by_amount($amount, $fileLine['label'], $fileLine['reference']);
 				if($transac === false) $transac = $this->search_dolibarr_transaction_by_receipt($amount);
+				if ($transac === false) $transac = $this->search_dolibarr_transaction_by_reference($amount, $fileLine['reference']);
 				$fileLine['bankline'] = $transac;
 			}
 		}
+	}
+
+    // Finds any banktransaction matching the reference field (num_chq). (Regardless of the time window)
+	// When the user uses reference field, we assume that the bank CSV has a unique reference string per transaction.
+	// That reference is stored in the num_chq field when doing the bankimport process.
+	// Here we check that field to serve a rocksolid check if a transaction already exists in Dolibarr.
+	private function search_dolibarr_transaction_by_reference($amount, $reference) {
+		if (!isset($reference) || empty($reference)) return false; // If reference is not set or empty, then there is no use of running this function
+		$sql = "SELECT rowid FROM " . MAIN_DB_PREFIX . "bank WHERE num_chq='".$this->db->escape($reference)."'";
+		$resql = $this->db->query($sql);
+		if($obj = $this->db->fetch_object($resql)) {
+			$bankLine = new AccountLine($this->db);
+			$bankLine->fetch($obj->rowid);
+			// before we return, we double check the amount.
+			$test = ($amount == $bankLine->amount);
+			if(!empty($test)) {
+				unset($this->TBank[$i]); // Its probably not in here, but to be sure, we're deleting it
+				return array($this->get_bankline_data($bankLine));
+			}
+		}
+		return false;
 	}
 
 	private function search_dolibarr_transaction_by_amount($amount, $label, $reference) {
